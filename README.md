@@ -37,4 +37,4 @@ cd open-food-nutrition-score
 pip install -r requirements.txt
 ```
 
-3. Open `food_nutrition_model.ipynb` and run the cells.
+3. Open and run the notebooks in `notebooks/` folder.
