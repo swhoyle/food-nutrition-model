@@ -1,4 +1,5 @@
-data/
+data/food.parquet
+data/food.csv
 __pycache__/
 .ipynb_checkpoints
 .vscode/
