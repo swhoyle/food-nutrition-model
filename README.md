@@ -38,3 +38,8 @@ pip install -r requirements.txt
 ```
 
 3. Open and run the notebooks in `notebooks/` folder.
+
+   - `1_data_extraction.ipynb`: Download and extract dataset (`food.parquet` -> `food.csv`)
+   - `2_eda.ipynb`: Exploratory data analysis using `food.csv`
+   - `3_preprocessing.ipynb`: Data cleaning and preprocessing (`food.csv` -> `food_cleaned.csv`)
+   - `4_model_building.ipynb`: Building prediction model using `food_cleaned.csv`
