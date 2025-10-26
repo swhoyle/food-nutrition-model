@@ -37,9 +37,10 @@ cd open-food-nutrition-score
 pip install -r requirements.txt
 ```
 
-3. Open and run the notebooks in `notebooks/` folder.
+3. Open and run the notebooks in the `notebooks/` folder
 
-   - `1_data_extraction.ipynb`: Download and extract dataset (`food.parquet` -> `food.csv`)
-   - `2_eda.ipynb`: Exploratory data analysis using `food.csv`
-   - `3_preprocessing.ipynb`: Data cleaning and preprocessing (`food.csv` -> `food_cleaned.csv`)
-   - `4_model_building.ipynb`: Building prediction model using `food_cleaned.csv`
+- [1_data_extraction.ipynb](notebooks/1_data_extraction.ipynb): Download and extract dataset (`food.parquet` → `food.csv`)  
+- [2_eda.ipynb](notebooks/2_eda.ipynb): Exploratory data analysis using `food.csv`  
+- [3_preprocessing.ipynb](notebooks/3_preprocessing.ipynb): Data cleaning and preprocessing (`food.csv` → `food_cleaned.csv`)  
+- [4_model_building.ipynb](notebooks/4_model_building.ipynb): Build prediction model using `food_cleaned.csv`
+
