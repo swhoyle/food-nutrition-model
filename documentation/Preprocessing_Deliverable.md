@@ -9,12 +9,12 @@
 
 From our EDA we found some serious data quality issues:
 - Energy values mixing kJ and kcal units (same canola oil showing 3,586 vs 900)
-- Impossible outliers (10^30 range for carbs which is physically impossible)
+- Impossible outliers (10^30 range for carbs which is just wrong)
 - 94% missing in added_sugars (basically useless column)
-- 72% missing in labels_tags (but null means "no labels" not "missing")
+- 72% missing in labels_tags (but null just means "no labels")
 - Class imbalance toward unhealthy (E=32%, D=23% vs A=15%, B=11%)
 
-The good news is core nutrients are mostly there - sugar, fat, carbs, proteins missing less than 3%.
+Good news is core nutrients are mostly there - sugar, fat, carbs, proteins missing less than 3%.
 
 
 ## Our Plan: 5 Phases
@@ -79,7 +79,7 @@ We're keeping it simple for the baseline:
 - Could use more sophisticated methods for trans_fat but regulatory 0 is a safe baseline
 - ingredients_from_palm_oil_n is redundant since ingredients_analysis_tags already has palm oil info
 
-The key insight: Different missing reasons need different strategies. We're matching strategy to the underlying cause of missingness, not using one-size-fits-all imputation.
+Key insight is different missing reasons need different strategies. We're matching the strategy to the underlying cause of missingness, not using one-size-fits-all imputation.
 
 
 ## Phase 2: Feature Engineering
@@ -110,13 +110,13 @@ Spencer's idea: we have rich info in tags but they're stored as messy JSON array
 **From additives**:
 - contains_additives (True if additives_n > 0)
 
-Why this matters? Instead of encoding thousands of tag combinations we get 15-20 binary signals that actually predict grade. Organic, vegan, additive-free foods score differently - those are the signals we care about.
+Why does this matter? Instead of encoding thousands of tag combinations we get like 15-20 binary signals that actually predict grade. Organic, vegan, additive-free foods score differently - those are the signals we care about really.
 
 ### Simplify Categories
 
-We have 10,000+ unique category combinations. Too many for modeling.
+We have 10,000+ unique category combinations. Way too many for modeling.
 
-**Solution**: Extract primary category, group into 8 tiers:
+Extract primary category, group into 8 tiers:
 - Beverages, Snacks, Condiments, Dairy, Meat & Seafood, Bakery, Grocery, Other/Undefined
 
 ### Processing Indicators
@@ -127,47 +127,73 @@ More ingredients plus additives means more processed which usually means worse g
 - palm_oil_indicator = Extract from ingredients_analysis_tags (True if contains "palm-oil" or "may-contain-palm-oil")
 
 
+## Phase 2.1: Handle Highly Correlated Variables
+
+From the correlation analysis we found some variables that move together:
+- Energy and carbohydrates: 0.91 (very strong)
+- Fat and energy: 0.89 (very strong)
+- Sugars and added_sugars: 0.79 (strong)
+- Proteins and energy: 0.69 (moderate-strong)
+- Additives_n and ingredients_n: 0.68 (moderate-strong)
+
+These make sense nutritionally - like fat and carbs both contribute to energy, or added sugars are part of total sugars. But when two variables are highly correlated they basically tell the model the same story twice, which can confuse some algorithms.
+
+**Multicollinearity** when features are highly correlated (move together), some models struggle to figure out which one actually matters. Like if energy always goes up when carbs go up, the model can't tell if energy OR carbs is predicting the grade, or if it's both. Some models handle this fine, others don't.
+
+**What we'll do**:
+1. Keep energy, fat, carbs, sugars - they're related but not redundant (they measure different things)
+2. Drop added_sugars - already 94% missing anyway, it's the same as sugars
+3. Keep additives_n and ingredients_n - they mean different things (additives are chemical additives, ingredients is just the ingredient count)
+
+If our models struggle (unstable predictions or irregular coefficients), we can:
+- Use Ridge or Lasso regression which automatically handles correlations
+- Apply PCA to smoosh correlated features together into new combined features
+- Drop one from each pair (like keep energy, drop carbs)
+
+For the baseline we'll keep most of them and hope the models can figure it out.
+
+
 ## Phase 3: Encode & Scale
 
 ### Scaling
 
-We'll use RobustScaler (uses median and IQR, robust to outliers). Energy might be 1,000 while proteins are 5 - without scaling the model thinks energy matters more just because the numbers are bigger.
+We'll use RobustScaler (uses median and IQR, good at handling outliers). Energy might be 1,000 while proteins are 5 - without scaling the model thinks energy matters more just because the numbers are bigger, even though they're measuring different things.
 
-Apply to all nutrients and ratios, NOT to completeness (already 0-1).
+Apply scaling to all nutrients and ratios, but NOT to completeness since it's already 0-1.
 
 ### Encoding
 
-The challenge is we have hundreds of brands and thousands of tags. One-hot encoding would create 10,000+ columns.
+Challenge is we have hundreds of brands and thousands of tag combinations. One-hot encoding would create like 10,000+ columns which is way too much.
 
-**Strategy**:
-- Brands: Target encoding (mean nutriscore per brand) or group into tiers (top 10, top 100, others)
-- Categories: One-hot (we reduced to 8 so it's feasible now)
-- Tags: Already binary from Phase 2, no encoding needed
-- Target (nutriscore_grade): Ordinal (A=0, B=1, C=2, D=3, E=4)
+Strategy:
+- Brands: Target encoding (take the mean nutriscore per brand) or just group into tiers (top 10 brands, top 100, everyone else)
+- Categories: One-hot encoding (we reduced to 8 categories so this is doable now)
+- Tags: Already binary flags from Phase 2, no encoding needed here
+- Target (nutriscore_grade): Ordinal encoding (A=0, B=1, C=2, D=3, E=4)
 
-**Text features**: We'll skip ingredients for baseline, add TF-IDF later if needed.
+Text features: Skip ingredients for the baseline, might add TF-IDF later if we need it.
 
 
 ## Phase 4: Handle Class Imbalance
 
 ### The Problem
 
-Our distribution is heavily skewed:
+Distribution is heavily skewed:
 - E: 134,562 (32%)
 - D: 98,591 (23%)
 - C: 81,611 (19%)
 - B: 47,033 (11%)
 - A: 62,500 (15%)
 
-Without balancing the model will just predict E and D.
+Without balancing the model will just predict E and D all the time since those have the most examples.
 
 ### Our Approach
 
-**Start simple**: Use `class_weight='balanced'` in models (LogisticRegression, RandomForest, XGBoost all support this). It adjusts weights inversely proportional to frequency.
+Start simple: Use `class_weight='balanced'` in models (LogisticRegression, RandomForest, XGBoost all support this). This makes the model pay more attention to rare classes and less to common ones.
 
-**If that's not enough**: Add SMOTE to create synthetic samples for A and B but ONLY on training set. Validation and test stay original for unbiased evaluation.
+If that's not enough add SMOTE to create synthetic samples for A and B but ONLY on training set. Validation and test stay original for unbiased evaluation.
 
-**If still struggling**: Combine undersample E+D with SMOTE A+B but be careful not to overfit to synthetic samples.
+If still struggling maybe combine undersample E+D with SMOTE A+B but gotta be careful not to overfit to synthetic samples.
 
 
 ## Phase 5: Validation Strategy (DO THIS BEFORE PHASE 4)
@@ -182,13 +208,13 @@ All splits stratified to maintain class distribution.
 
 ### Cross-Validation
 
-Use 5-fold stratified CV during hyperparameter tuning (GridSearch/RandomSearch) on training set only. Never tune on test set.
+Use 5-fold stratified CV during hyperparameter tuning (GridSearch or RandomSearch) on training set only. Never ever tune hyperparameters on the test set or we'll fool ourselves.
 
 ### Evaluation Metrics
 
-**Primary**: Macro F1-score (averages across classes, accounts for imbalance)
+Primary: Macro F1-score - averages across all classes and accounts for imbalance
 
-**Secondary**: Per-class precision/recall/F1, confusion matrix, balanced accuracy
+Secondary: Per-class precision/recall/F1, confusion matrix to see which classes we're screwing up, balanced accuracy
 
 
 ## Task Division
@@ -224,15 +250,15 @@ Use 5-fold stratified CV during hyperparameter tuning (GridSearch/RandomSearch) 
 ## Success Criteria
 
 We'll know we did it right when:
-- No duplicates remain
-- No extreme outliers (energy < 2000, carbs < 150, fat < 100)
-- No missing values
-- All energy in kcal (no 3000+ values)
-- Binary tag features created (~15-20 new columns)
-- All features encoded and scaled
-- Train/val/test sets stratified
-- Processing completes in under 60 minutes
-- Datasets save and load without errors
+- No duplicates left in the data
+- No extreme outliers (energy under 2000, carbs under 150, fat under 100)
+- No missing values anywhere
+- All energy in kcal (no 3000+ values that should be in kJ)
+- Binary tag features created (around 15-20 new columns)
+- All features encoded and scaled properly
+- Train/val/test sets stratified by grade
+- Processing finishes in under 60 minutes
+- Datasets actually save and load without errors
 
 
 ## What Comes Next
@@ -245,5 +271,5 @@ After preprocessing, we'll:
 5. Iterate if needed (add SMOTE, try ensemble methods)
 6. Deliver: trained model, performance report, feature importance, recommendations
 
-The goal is to understand which nutrients and categories predict Nutri-Score grades, so we can build a model that works.
+Goal is to understand which nutrients and categories predict Nutri-Score grades, so we can build a model that actually works.
 
