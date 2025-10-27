@@ -1,6 +1,6 @@
 # 🥗 Open Food Nutrition Score Model
 
-UCSD DSE 220 Project - Fall 2026<br>
+UCSD DSE 220 Project - Fall 2025<br>
 Team: Spencer Hoyle, Francisco Chavezosa, Sean He
 
 ## 📘 Abstract
