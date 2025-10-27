@@ -1,5 +1,8 @@
 # 🥗 Open Food Nutrition Score Model
 
+UCSD DSE 220 Project - Fall 2026<br>
+Team: Spencer Hoyle, Francisco Chavezosa, Sean He
+
 ## 📘 Abstract
 The objective of this project is to develop a **supervised machine learning model** for predicting the **Nutri-Score (A–E)**, a key indicator of nutritional quality, for a wide range of food products.  
 
