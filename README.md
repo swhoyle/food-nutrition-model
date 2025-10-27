@@ -28,7 +28,7 @@ The findings of this study aim to support **consumers**, **manufacturers**, and 
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/open-food-nutrition-score.git
+git clone https://github.com/swhoyle/food-nutrition-model.git
 cd open-food-nutrition-score
 ```
 
