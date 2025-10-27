@@ -32,7 +32,7 @@ git clone https://github.com/swhoyle/food-nutrition-model.git
 cd open-food-nutrition-score
 ```
 
-2. Install dependencies
+2. Install dependencies ([requirements.txt](requirements.txt))
 ```
 pip install -r requirements.txt
 ```
