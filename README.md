@@ -43,9 +43,9 @@ pip install -r requirements.txt
 3. Open and run the notebooks in the `notebooks/` folder
 
 - [1_data_extraction.ipynb](notebooks/1_data_extraction.ipynb): Download and extract dataset (`food.parquet` → `food.csv`)  
-- [2_eda.ipynb](notebooks/2_eda.ipynb): Exploratory data analysis using `food.csv`  
-- [3_preprocessing.ipynb](notebooks/3_preprocessing.ipynb): Data cleaning and preprocessing (`food.csv` → `food_cleaned.csv`)  
-- [4_model_building.ipynb](notebooks/4_model_building.ipynb): Build prediction model using `food_cleaned.csv`
+- [2_eda.ipynb](notebooks/2_eda.ipynb): Exploratory data analysis
+- [3_preprocessing.ipynb](notebooks/3_preprocessing.ipynb): Data cleaning and preprocessing
+- [4_first_model.ipynb](notebooks/4_first_model.ipynb): Build our first prediction model
 
 # 1. Data Extraction
 
@@ -57,7 +57,7 @@ JSON-encoded columns were parsed and flattened into standard tabular form, and c
 
 # 2. Exploratory Data Analysis
 
-TThe next step is to perform Exploratory Data Analysis (EDA) on our dataset `food.csv`. We want to understand the data structure, distributions, and relationships between features, and to identify any data quality issues before preprocessing.
+The next step is to perform Exploratory Data Analysis (EDA) on our dataset `food.csv`. We want to understand the data structure, distributions, and relationships between features, and to identify any data quality issues before preprocessing.
 
 The dataset contains 424,297 observations and 24 features:
 - `code`: Unique product code
@@ -94,3 +94,25 @@ The dataset contains 424,297 observations and 24 features:
 ![alt text](plots/correlated_nutritional_features.png)
 
 # 3. Data Preprocessing
+
+Following our EDA and to prepare our data for modeling, we implemented a data preprocessing plan: [documentation/Preprocessing_Deliverable.md](documentation/Preprocessing_Deliverable.md)
+
+The code for our preprocessing can be found [notebooks/3_data_preprocessing.ipynb](notebooks/3_data_preprocessing.ipynb)
+
+The notebook implements the complete preprocessing pipeline in 5 phases:
+1. **Clean Data**: Remove duplicates, cap outliers, fix units, handle missing values
+2. **Feature Engineering**: Calculate ratios, extract binary flags, simplify categories
+3. **Encode & Scale**: RobustScaler, target encoding, one-hot encoding
+4. **Split Data**: Stratified 70/15/15 train/val/test split
+5. **Balance Classes**: Apply SMOTE to training set only
+
+**Important**: We split BEFORE balancing to prevent synthetic samples from leaking into validation/test sets.
+
+Our processed data is saved:
+  - train_processed.csv: (384395, 38)
+  - val_processed.csv: (51911, 38)
+  - test_processed.csv: (51911, 38)
+
+# 4. First Model
+
+Details on our first model can be found [notebooks/4_first_model.ipynb](notebooks/4_first_model.ipynb)
