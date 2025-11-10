@@ -47,3 +47,50 @@ pip install -r requirements.txt
 - [3_preprocessing.ipynb](notebooks/3_preprocessing.ipynb): Data cleaning and preprocessing (`food.csv` → `food_cleaned.csv`)  
 - [4_model_building.ipynb](notebooks/4_model_building.ipynb): Build prediction model using `food_cleaned.csv`
 
+# 1. Data Extraction
+
+The first stage of this project involved obtaining and preparing the Open Food Facts dataset, a large open-source database containing detailed product information for food items from around the world. The dataset, available on Hugging Face as `food.parquet`, contains approximately 4 million rows and over 110 columns, including several semi-structured fields stored in JSON format.
+
+After downloading the dataset, we performed an initial inspection to understand its dimensions, data types, and memory requirements, identifying which fields required transformation. We then applied filters to retain only entries meeting project-specific criteria, ensuring that products had sufficient and reliable data. Key attributes such as product identifiers, names, categories, ingredients, and nutritional metrics were selected, while unnecessary or low-quality fields were removed.
+
+JSON-encoded columns were parsed and flattened into standard tabular form, and column names were reformatted for clarity and consistency. The resulting dataset was exported as `food.csv`, representing a structured and analysis-ready version of the Open Food Facts data. This refined subset provides a strong foundation for exploratory data analysis and subsequent preprocessing steps.
+
+# 2. Exploratory Data Analysis
+
+TThe next step is to perform Exploratory Data Analysis (EDA) on our dataset `food.csv`. We want to understand the data structure, distributions, and relationships between features, and to identify any data quality issues before preprocessing.
+
+The dataset contains 424,297 observations and 24 features:
+- `code`: Unique product code
+- `brands`: Brand name of the food product
+- `product`: Name of the food product
+- `lang`: Language of the product
+- `categories_tags`: List of category tags
+- `food_groups_tags`: List of food group tags
+- `labels_tags`: List of label tags
+- `additives_n`: Number of additives
+- `additives_tags`: List of additive tags
+- `allergens_tags`: List of allergen tags
+- `ingredients_ananlysis_tags`: List of ingredients analysis tags
+- `ingredients_n`: Number of ingredients
+- `ingredients_from_palm_oil_n`: Number of ingredients from palm oil
+- `ingredients`: List of ingredients
+- `completeness`: Completeness of product data (%)
+- `energy`: Energy per 100g
+- `sugars`: Sugar per 100g
+- `added_sugar`: Added sugar per 100g
+- `carbohydrates`: Carbohydrates per 100g
+- `salt`: Salt per 100g
+- `fat`: Fat per 100
+- `trans_fat`: Trans fat per 100g
+- `proteins`: Protein per 100g
+- **`nutriscore_grade`**: Nutritional score grade (a,b,c,d,e)
+
+
+
+![alt text](plots/pearson_correlation_heatmap.png)
+
+![alt text](plots/spearman_correlation_heatmap.png)
+
+![alt text](plots/correlated_nutritional_features.png)
+
+# 3. Data Preprocessing
