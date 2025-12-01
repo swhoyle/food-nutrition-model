@@ -1,5 +1,5 @@
 # 🥗 Open Food Nutrition Score Model
-UCSD DSE 220 – Final Project (Fall 2025)  
+UCSD DSE 220 Project (Fall 2025)  
 Team: Spencer Hoyle, Francisco Chavezosa, Sean He
 
 
@@ -29,7 +29,7 @@ Utilizing the comprehensive **Open Food Facts** dataset — containing detailed 
 
 These processed features are used to train classification algorithms designed to accurately assign Nutri-Scores to new or unlabeled products.
 
-![alt text](images/openfoodfacts.jpeg)
+![alt text](images/openfoodfacts.jpeg)<br>
 [Learn more about Open Food Facts](https://world.openfoodfacts.org/discover)
 
 
@@ -43,7 +43,7 @@ The findings of this study aim to support consumers, manufacturers, and public h
 
 ## 2. Figures
 
-This section presents selected figures used throughout our exploratory analysis and modeling workflow. Full-resolution versions of all figures can be found in the `plots/` directory.
+This section presents selected figures used throughout our exploratory analysis and modeling workflow.
 
 
 -  [Figure 1: Summary Statistics](#figure-1-summary-statistics)
@@ -60,6 +60,9 @@ This section presents selected figures used throughout our exploratory analysis 
  -  [Figure 12: Class SMOTE Balance](#figure-12-class-smote-balance)
  -  [Figure 13: KNN Classification Report (First Model)](#figure-13-knn-classification-report-first-model)
  -  [Figure 14: KNN Confusion Matrix (First Model)](#figure-14-knn-confusion-matrix-first-model)
+ -  [Figure 15: PCA Cumulative Variance (Second Model)](#figure-15-pca-cumulative-variance-second-model)
+ -  [Figure 16: KMeans Tuning (Second Model)](#figure-16-kmeans-tuning-second-model)
+ -  [Figure 17: KMeans Clusters (Second Model)](#figure-17-kmeans-clusters-second-model)
 
 ## 3. Methods
 This section summarizes the workflow used to extract, explore, preprocess, and prepare the data for modeling. Each step references the corresponding Jupyter notebook in the repository.
@@ -104,6 +107,8 @@ We prepared the data for modeling through cleaning, feature engineering, encodin
 
 **Important**: We split BEFORE balancing to prevent synthetic samples from leaking into validation/test sets.
 
+---
+
 ### 3.4 First Model  
 Notebook: [`notebooks/4_first_model.ipynb`](notebooks/4_first_model.ipynb)
 
@@ -112,15 +117,24 @@ This notebook establishes our baseline predictive model using the processed data
 - K-Nearest Neighbors (KNN) classifier with k = 7
 - Evaluated early performance (accuracy, precision/recall, F1)  
 
-### 3.5 Second Model
-Notebook: [`5_second_model.ipynb`](notebooks/5_second_model.ipynb)
+---
+
+### 3.5 Second Model — KMeans clustering (method)
+Notebook: [`notebooks/5_second_model.ipynb`](notebooks/5_second_model.ipynb)
+
+This notebook implements our second model using unsupervised method.
+
+- KMeans clustering applied after PCA dimensionality reduction.
+- PCA: explored up to 30 components; used n_components=2 for visualization and final clustering.
+- Tuning: subsample (50,000 rows) used to evaluate k ∈ {2,3,4,5} using WCSS (inertia) and silhouette.
+- Choose the best number of clusters for KMeans.
 
 ---
 
 ## 4. Results
 This section summarizes results of each method step.
 
-### 4.1 Data Extraction (Results)
+### 4.1 Data Extraction - Results
 - Downloaded raw Dataset saved to `food.parquet` (4m rows)
 - Filtered dataset for english products with valid nutriscore, and products with ingredenients, reducing size from 4m rows to 424k rows.
 
@@ -148,7 +162,7 @@ final_cols = [
 ```
 - Initally Processed Dataset saved to `food.csv` (424k rows)
 
-### 4.2 Data Exploration (Results)
+### 4.2 Data Exploration - Results
 
 The dataset contains 424,297 observations and 24 features:
 - `code`: Unique product code
@@ -178,11 +192,6 @@ The dataset contains 424,297 observations and 24 features:
 
 ---
 #### Summary Statistics:
-Numeric columns (nutrients and counts) are right-skewed, with many low values and a few extreme outliers.
-
-- `energy` values vary widely, suggesting mixed units (kcal vs kJ) — will need normalization later.
-- `completeness` averages around 0.6, meaning most records are moderately detailed.
-
 
 ##### **Figure 1: Summary Statistics**
 ![Summary Statistics](plots/summary_statistics.png)  
@@ -254,7 +263,7 @@ Visualizes pairwise nutrient interactions and their density distributions.
 
 ---
 
-### 4.3 Data Preprocessing (Results)
+### 4.3 Data Preprocessing - Results
 
 #### Phase 1: Clean the Data
 - Removed duplicate brand/products and kept the record with the highested `completeness` (101,798 rows removed)
@@ -309,7 +318,7 @@ Visualizes pairwise nutrient interactions and their density distributions.
   - `val_processed.csv`: (51,911 rows, 38 columns)
   - `test_processed.csv`: (51,911 rows, 38 columns)
 
-### 4.4 First Model (Results)
+### 4.4 First Model - Results
 
 Our first model using KNN (k=7) had the following results:
 - Train Accuracy: 0.8559
@@ -324,7 +333,39 @@ Our first model using KNN (k=7) had the following results:
 ![alt text](plots/cm_knn_k7_test.png)
 
 
-### 4.5 Second Model (Results)
+### 4.5 Second Model — KMeans (results)
+
+Our second model using PCA and KMeans had the following results:
+
+##### Figure 15: PCA Cumulative Variance (Second Model)
+![alt text](plots/pca_cumulative_variance.png)
+
+- PC1: 0.7947 (cumulative: 0.7947)
+- PC2: 0.2045 (cumulative: 0.9991)
+- PC3: 0.0009 (cumulative: 1.0000)
+- PC4: 0.0000 (cumulative: 1.0000)
+- PC5: 0.0000 (cumulative: 1.0000)
+- PC6: 0.0000 (cumulative: 1.0000)
+- PC7: 0.0000 (cumulative: 1.0000)
+- PC8: 0.0000 (cumulative: 1.0000)
+- PC9: 0.0000 (cumulative: 1.0000)
+- PC10: 0.0000 (cumulative: 1.0000)
+
+##### Figure 16: KMeans Tuning (Second Model)
+![alt text](plots/kmeans_tuning.png)
+
+- Use k=5 to match 5 Nutri-Score grades
+- WCSS: 2.60e+19
+- Silhouette: 0.999578
+- Cluster distribution
+  - 0 (99.95%)
+  - 1 (0.006%)
+  - 2 (0.003%)
+  - 3 (0.003%)
+  - 4 (0.003%)
+
+##### Figure 17: KMeans Clusters (Second Model)
+![alt text](plots/kmeans_clusters.png)
 
 ---
 
@@ -332,18 +373,27 @@ Our first model using KNN (k=7) had the following results:
 
 This section summarizes the reasoning behind our methodological choices, interprets the results, and highlights limitations in the project.
 
-### 5.1 Data Extraction
+### 5.1 Data Extraction - Discussion
 Our extraction and filtering choices were driven by the need to create a reliable, consistent subset of the Open Food Facts dataset. Restricting the data to English-language products, valid Nutri-Score entries, and products with ingredient lists ensured that downstream models were trained on clean and usable information.
 
-### 5.2 Data Exploration
+### 5.2 Data Exploration - Discussion
 EDA revealed several challenges—highly skewed nutritional distributions, missing values in key fields, and a strong imbalance across Nutri-Score grades—which directly informed our preprocessing steps.
 
-Nutri-Score analysis:
+**Summary Statistics**:
+
+Numeric columns (nutrients and counts) are right-skewed, with many low values and a few extreme outliers.
+
+- `energy` values vary widely, suggesting mixed units (kcal vs kJ) — will need normalization later.
+- `completeness` averages around 0.6, meaning most records are moderately detailed.
+
+**Nutri-Score analysis**:
+
 - The blue/green slices (d, e) dominate the dataset.
 - Healthy classes a and b occupy smaller areas.
 - This imbalance might affect model learning and should be taken into consideration.
 
-**1. Strong Positive Correlations**
+**Strong Positive Correlations**:
+
 These reflect expected nutritional relationships:
 - **Energy ↔ Carbohydrates (0.91)** — Carbs are a major calorie source.  
 - **Energy ↔ Fat (0.89)** — Fat contributes the most calories per gram (9 kcal).  
@@ -351,24 +401,27 @@ These reflect expected nutritional relationships:
 - **Carbohydrates ↔ Sugars (0.65)** — Sugars are a subset of total carbs.  
 - **Ingredients_n ↔ Additives_n (0.68–0.72)** — More complex/processed foods contain more additives.
 
-**2. Moderate or Weak Correlations**
+**Moderate or Weak Correlations**:
+
 - **Added sugars ↔ Sugars (0.71)** — Added sugars contribute significantly to total sugars.  
 - **Added sugars ↔ Carbohydrates (0.42)** — High added-sugar foods trend toward high carbs.  
 - **Energy ↔ Sugars (moderate)** — Sugary products contribute calories but not as strongly as fats or complex carbs.  
 - **Salt ↔ Other nutrients (near 0)** — Salty and sweet foods represent distinct product categories.  
 
-**3. Negative or Near-Zero Correlations**
+**Negative or Near-Zero Correlations**:
+
 - **Proteins ↔ Sugars (–0.22)** — High-protein foods tend to have lower sugar content.  
 - **Completeness ↔ All nutrients (≈0)** — Completeness reflects data quality, not nutrition.  
 - **Trans_fat ↔ Nutrients (≈0)** — Trans fat levels relate more to regulation than general nutrition.
 
-**Insights From Pairwise Nutrient Plots**
+**Insights From Pairwise Nutrient Plots**:
+
 - **Energy vs. Fat** shows the strongest upward trend; fat-rich foods are the most calorie-dense.  
 - **Energy vs. Carbohydrates** is positive but more variable due to different product types.  
 - **Energy vs. Sugars** shows moderate correlation—sugar contributes calories, but not as dominantly as fats.  
 - **Energy vs. Protein** has a mild positive slope, consistent with protein’s lower caloric density.
 
-### 5.2 Preprocessing Decisions
+### 5.3 Data Preprocessing - Discussion
 The preprocessing pipeline was designed to correct inconsistencies and create a modeling-ready dataset.  
 - **Outlier capping** and **unit normalization** (especially for energy) were necessary to prevent extreme values from distorting model learning.  
 - **Feature engineering** clarified nutritional relationships by introducing meaningful ratios and dietary indicators.  
@@ -377,8 +430,7 @@ The preprocessing pipeline was designed to correct inconsistencies and create a 
 
 These decisions collectively improved the quality and structure of the inputs fed to the models.
 
-### 5.3 First Model - Discussion
-
+### 5.4 First Model - Discussion
 
 We trained our first supervised learning model using a K-Nearest Neighbors (KNN) classifier with k = 7, selected based on initial experimentation. The model was trained using the balanced training set (after applying SMOTE) and evaluated on both validation and test sets. Our numeric features were scaled using the RobustScaler, and missing values were imputed using median imputation, ensuring the model received clean and normalized inputs.
 
@@ -411,45 +463,132 @@ For future improvements, we plan to explore models that naturally combat varianc
 4. Naive Bayes is very fast baseline, handles categorical + numeric data well; useful for comparison with more complex models.
 
 
-### 5.4 Believability of Results & Shortcomings
-The results appear scientifically consistent: strong correlations among nutrients aligned with nutritional principles, and the model favored features known to drive Nutri-Score (fat, sugar, salt, energy density). However, several limitations remain:
+### 5.5 Second Model — Discussion
 
-- **Data Quality:** Many fields were incomplete, inconsistent, or self-reported, which introduces noise into both features and labels.
-- **Category & Ingredient Variability:** Tags and ingredient lists are highly unstructured, limiting their usefulness without more advanced NLP processing.
-- **Nutri-Score Itself:** The scoring system is rule-based and nonlinear; machine learning can approximate it but cannot perfectly replicate edge cases.
+Before running KMeans, we apply PCA to reduce dimensions and understand feature redundancy (37 Feautures). It also improves KMeans performance by reducing dimensionality and removing correlated features.
 
-### 5.5 Overall Reflection
-The project successfully demonstrated that Nutri-Score can be predicted with reasonable accuracy using structured nutrient data and engineered features. The workflow is reproducible, scalable, and provides a strong foundation for more advanced modeling. Future improvements—such as ingredient-list NLP, product-image modeling, or hybrid rule-based + ML systems—could meaningfully increase performance.
+The results are striking - our 37 features collapse to essentially 2 dimensions:
+- **PC1**: 79.5% of variance
+- **PC2**: 20.4% of variance  
+- **Total**: 99.9% with just 2 components
+- **Remaining 35 components**: <0.1% variance
 
+This extreme collapse reveals heavy feature redundancy from preprocessing:
 
----
+1. **RobustScaler** normalized everything to similar scales, creating linear relationships
+2. **One-hot encoding** created math dependent features (8 categories = 8 dependent binary columns)
+3. **Target encoding** compressed thousands of brands into one numeric value
+4. **Binary features** correlate with nutrition (e.g, is_vegan to low protein)
+5. **Feature engineering** created perfect correlations (e.g., sodium_mg = salt * 40)
+
+PC1 most likely represents the main **nutrition density** axis (healthy to unhealthy), while PC2 captures secondary variation (maybe beverage vs solid and / or protein vs carbs).
+
+We'll use 2 components since that captures 99.9% of variance. The extreme reduction (37D to 2D) suggests the data may lack natural diversity for meaningful clustering.
+
+**Interpreting Tuning Results**:
+- **WCSS**: Measures cluster tightness (lower = better). Always decreases as k increases.
+- **Silhouette Score**: Measures cluster separation quality, range -1 to +1 (higher = better)
+
+Our results show very high silhouette scores (~0.9996) across all k values, which initially looks great. However, this can be misleading when combined with severe cluster imbalance.
+
+When you have one massive cluster (99%+ of samples) and tiny outlier clusters, silhouette can be artificially high because the outliers are well-separated from the main mass, but this doesn't mean we found meaningful groups.
+
+We chose **k=5** to align with the 5 Nutri-Score grades, letting us compare unsupervised clusters to the supervised categories.
+
+- **Cluster 0 basically ate the whole dataset**
+- **99.96%** of all products -> dense red cluster
+- The other 4 clusters are tiny
+  - Black Xs = cluster centers
+  - PC1 (79%) = main nutrition gradient
+  - PC2 (20%) = smaller differences (like drinks vs solids)
+
+Everything collapsed into one giant group, so KMeans can't find real structure.
+
+Our preprocessing made the data **too uniform**, which works for KNN but **breaks unsupervised clustering**.
+
+![alt text](plots/model_curve.png)
+
+This model exhibits **underfitting**:
+
+**Evidence**:
+- Cluster purity of 22.5% shows poor performance even on training data
+- No meaningful pattern discovered -- 99.96% in one cluster
+- Cannot distinguish between nutritional quality categories
+
+**Root cause**: Not model complexity but **data preprocessing destroyed natural variation**:
+- RobustScaler normalized away variance that separates product types
+- Feature engineering created perfect correlations (sodium_mg = salt * 40)
+- One-hot encoding added dependent features
+- 37D collapsed to 2D (99.9% variance) indicating artificial homogeneity
+
+This **is not** traditional underfitting from model simplicity, but rather **data inadequacy** for unsupervised task(s).
+
+### 5.6 Model Comparison - Discussion
+
+#### What Went Wrong? - Key Insights
+
+The preprocessing pipeline was inadvertantly **optimized for supervised learning** (KNN: 76.5% accuracy) but **conflicts with unsupervised learning**, especially for our application of KMeans:
+
+**For KNN (supervised)**: Our preprocessing works great!
+- RobustScaler makes distances comparable
+- SMOTE balances classes
+- Feature engineering creates predictive correlations
+- Result: 76.5% test accuracy (potentially higher leveraging other features)
+
+**For KMeans (unsupervised)**: Same preprocessing fails!
+- RobustScaler destroys natural variance clusters need
+- SMOTE adds synthetic samples reducing diversity
+- Feature engineering creates artificial correlations
+- Result: 99.96% in one cluster and 22.5% purity
+
+**The main culprit** -- Aggressive normalization and feature correlation.
+
+#### Model Improvements
+
+1. **Different preprocessing**: StandardScaler instead of Robust, keep 5-10 PCA components or cluster on raw features (a completley different approach to our current method)
+2. **Skip SMOTE**: Use natural distribution (though testing and results showed this wasn't the main issue in this case, but is still problematic)
+3. **Alternative algorithms**: DBSCAN finds density-based clusters and Hierarchical shows dendrogram
+4. **Simpler features**: Use only 9 base nutritional features and skip engineered ratios
+
+#### Final Takeaway
+
+Model 2 demonstrates a valid PCA + KMeans implementation with correct metrics (0.9996 silhouette). However, the severe cluster imbalance (99.96% in one cluster, 22.5% purity) reveals a harsh lesson:
+
+**Preprocessing optimized for supervised learning can destroy the natural variation that unsupervised clustering needs.**
+
+The same preprocessing that gives KNN 76.5% accuracy makes KMeans fail at finding groups. For future work:
+- **For supervised learning**: Current preprocessing works great
+- **For clustering**: Need different preprocessing that preserves natural variance
+
+This was not a failure of KMeans -- it is a **valuable learning experience** about matching preprocessing strategies to model objectives.
+
 
 ## 6. Conclusion
-This project successfully built a machine learning pipeline capable of predicting Nutri-Score classifications using structured nutritional data.  
-Key outcomes:
+This project demonstrated that Nutri-Score can be reasonably predicted using structured nutritional, ingredient, and additive features from the Open Food Facts dataset. Our modeling pipeline—spanning extraction, EDA, preprocessing, feature engineering, and supervised learning—showed that data quality, preprocessing decisions, and feature transformations have a major impact on model performance.
 
-- Demonstrated the value of feature engineering  
-- Established a reproducible preprocessing pipeline  
-- Built and evaluated a baseline predictive model  
+A key lesson learned is that preprocessing must match the modeling objective. Techniques that benefit supervised models (RobustScaler, SMOTE, engineered nutrient ratios, target encoding) can unintentionally harm unsupervised methods such as clustering by removing natural variance and creating artificial dependencies between features. This highlighted the importance of designing pipelines that respect the assumptions of each modeling approach.
 
-**Future directions:**
-- Incorporate NLP from ingredient text  
-- Use image features from product photos  
-- Experiment with deep learning architectures  
-- Improve handling of missing nutrient data  
+Overall, our results show strong potential for automating nutritional assessment at scale and provide meaningful insights into which nutrient and ingredient patterns drive Nutri-Score classifications. With more time, future extensions could include:
+
+- Using NLP on ingredient text
+- Incorporating product images
+- Training deeper or ensemble models
+- Reducing preprocessing for unsupervised tasks (e.g., clustering or PCA on raw data)
+
+This work establishes a solid foundation for applying machine learning to public nutrition data and demonstrates the value—and challenges—of building reliable food-health prediction systems.
 
 ---
 
 ## 7. Statement of Collaboration
 
-**Spencer Hoyle – Team Lead & Writing**  
-Led data extraction, preprocessing pipeline, project structure, and final report writing.
+**Spencer Hoyle – Team Lead**  
+Led project deadlines and milestones, project structure, dataset extraction and final report writing.
 
-**Sean He – EDA & Modeling**  
-Performed exploratory data analysis, contributed to modeling and evaluation.
+**Sean He – Machine Learning Engineer**  
+Performed exploratory data analysis, contributed to modeling and evaluation (primarily model #1).
 
-**Francisco Chavezosa – Feature Engineering & Modeling**  
-Designed engineered features, contributed to modeling and evaluation.
+**Francisco Chavezosa – Machine Learning Engineer**  
+Performed data preprocessing, contributed to modeling and evaluation (primarily model #2).
 
 ---
 
@@ -472,4 +611,4 @@ pip install -r requirements.txt
 - [2_eda.ipynb](notebooks/2_eda.ipynb): Exploratory data analysis
 - [3_data_preprocessing.ipynb](notebooks/3_data_preprocessing.ipynb): Data cleaning and preprocessing
 - [4_first_model.ipynb](notebooks/4_first_model.ipynb): Build our first prediction model
-- [5_second_model.ipynb](notebooks/5_second_model.ipynb): Build our first prediction model
+- [5_second_model.ipynb](notebooks/5_second_model.ipynb): Build our second prediction model
