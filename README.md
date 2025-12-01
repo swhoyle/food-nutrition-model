@@ -107,9 +107,8 @@ Notebook: [`notebooks/4_first_model.ipynb`](notebooks/4_first_model.ipynb)
 
 This notebook establishes our baseline predictive model using the processed dataset, exploring initial classification performance.
 - Loaded processed train/val/test splits  
-- Trained baseline classification models  
+- K-Nearest Neighbors (KNN) classifier with k = 7
 - Evaluated early performance (accuracy, precision/recall, F1)  
-- Generated initial confusion matrices for comparison with future models  
 
 ### 3.5 Second Model
 Notebook: [`5_second_model.ipynb`](notebooks/5_second_model.ipynb)
@@ -310,6 +309,19 @@ Visualizes pairwise nutrient interactions and their density distributions.
 
 ### 4.4 First Model (Results)
 
+Our first model using KNN (k=7) had the following results:
+- Train Accuracy: 0.8559
+- Val Accuracy: 0.7635
+- Test Accuracy: 0.7648
+
+##### Figure 13: KNN Classification Report (First Model)
+![alt text](plots/results_knn_train_val.png)<br>
+![alt text](plots/results_knn_k7_test.png)
+
+##### Figure 14: KNN Confusion Matrix (First Model)
+![alt text](plots/cm_knn_k7_test.png)
+
+
 ### 4.5 Second Model (Results)
 
 ---
@@ -363,7 +375,38 @@ The preprocessing pipeline was designed to correct inconsistencies and create a 
 
 These decisions collectively improved the quality and structure of the inputs fed to the models.
 
-### 5.3 Model Interpretation
+### 5.3 First Model - Discussion
+
+
+We trained our first supervised learning model using a K-Nearest Neighbors (KNN) classifier with k = 7, selected based on initial experimentation. The model was trained using the balanced training set (after applying SMOTE) and evaluated on both validation and test sets. Our numeric features were scaled using the RobustScaler, and missing values were imputed using median imputation, ensuring the model received clean and normalized inputs.
+
+The training performance shows a high accuracy of 0.8559, indicating that KNN can effectively learn patterns from the training data. However, the validation and test accuracies drop to 0.7635 and 0.7648, respectively. This ~9% accuracy gap suggests mild overfitting: the model performs well on the balanced training data but struggles slightly when generalizing to unseen samples with the original class distribution.
+
+From the classification reports, performance varies by class. Nutri-Score grades A (0) and E (4) achieve high recall and F1-scores, while grade B (1) remains more difficult to classify due to its overlap with adjacent nutritional profiles. Across all metrics, the validation and test reports are closely aligned, indicating stable generalization. The confusion matrix further shows that most misclassifications occur between adjacent Nutri-Score categories, which is expected given the ordinal nature of the target.
+
+![alt text](plots/model_curve.png)
+
+The model sits between overfit and appropriately fit, which is normal for KNN.
+
+In summary, KNN model shows moderate overfitting, with training accuracy at 85.6% and validation/test accuracy around 76.4%. The stable match between validation and test accuracy suggests good generalization, despite expected overfitting inherent to KNN.
+
+To understand where our KNN model lies on the underfitting-overfitting curve, we trained several models using different values of k (the number of neighbors). As expected, changing k significantly affected the balance between model complexity and generalization. When we used small k values such as 3 or 5, the model achieved extremely high training accuracy—over 87% and up to 91%. However, the validation accuracy showed no improvement and remained around 76%. This pattern indicates clear overfitting: the model memorized the training data, forming an overly complex decision boundary that does not generalize well to new samples.
+
+On the other end of the spectrum, when we increased k to larger values like 9 or 11, the training accuracy declined noticeably, and validation accuracy also slightly decreased. This behavior suggests underfitting, as the model becomes too simple and smooths out important distinctions across Nutri-Score classes. Both training and validation performance drop, meaning the model can no longer capture the underlying structure of the nutritional data.
+
+Among all tested configurations, k = 7 achieved the best overall performance. It maintains relatively high training accuracy (about 86%) while achieving the strongest validation accuracy (~76.35%). This balance places the model in a zone of mild overfitting, which is expected for KNN—especially due to the large, SMOTE-balanced training dataset. The small generalization gap between the validation and test accuracy (both ~76.4%) confirms that the model generalizes consistently and that there is no data leakage or instability in preprocessing.
+
+Given these findings, the KNN model with k = 7 sits slightly toward the overfitting side of the fitting graph but still performs reliably.
+
+For future improvements, we plan to explore models that naturally combat variance and capture nonlinear patterns more effectively. Decision Trees and Random Forests are strong next candidates because they can model feature interactions and typically generalize better on tabular datasets like this. Support Vector Machines (SVM) may also be beneficial due to their ability to learn complex boundaries with kernel methods, while Naive Bayes can provide a fast baseline comparison. These models could help reduce overfitting and improve classification accuracy beyond the performance ceiling of KNN.
+
+1. Decision Trees can capture nonlinear interactions between nutritional features; provide interpretability (feature importance), and often outperform KNN on tabular data
+
+2. Random Forest reduces variance compared to a single tree; provides stronger generalization, and handles high-dimensional feature sets well, and less sensitive to feature scaling
+
+3. Support Vector Machines (SVM) is effective for multiclass classification; works well with standardized numeric features; and good at finding nonlinear boundaries with kernels
+
+4. Naive Bayes is very fast baseline, handles categorical + numeric data well; useful for comparison with more complex models.
 
 
 ### 5.4 Believability of Results & Shortcomings
