@@ -600,7 +600,7 @@ Overall, this work underscores both the promise and the challenges of applying m
 ## 7. Statement of Collaboration
 
 **Spencer Hoyle – Team Lead**  
-Led project deadlines and milestones, project structure, dataset extraction and final report writing.
+Led project deadlines and milestones, project structure, dataset extraction / exploration and final report writing.
 
 **Sean He – Machine Learning Engineer**  
 Performed exploratory data analysis, contributed to modeling and evaluation (primarily model #1).
