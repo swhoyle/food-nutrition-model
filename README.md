@@ -46,76 +46,152 @@ The findings of this study aim to support consumers, manufacturers, and public h
 This section presents selected figures used throughout our exploratory analysis and modeling workflow. Full-resolution versions of all figures can be found in the `plots/` directory.
 
 
-1. [Figure 1: Summary Statistics](#figure-1-summary-statistics)
-2. [Figure 2: Top 10 Category Tags](#figure-2-top-10-category-tags)
-3. [Figure 3: Top 10 Food Group Tags](#figure-3-top-10-food-group-tags)
-4. [Figure 4: Top 10 Label Tags](#figure-4-top-10-label-tags)
-5. [Figure 5: Top 10 Additive Tags](#figure-5-top-10-additive-tags)
-
-
-
-### **Figure 1 — Nutri-Score Distribution**
-Shows the distribution of the target variable (`nutriscore_grade`) across classes A–E.
-
-![Nutri-Score Distribution](plots/nutri_score_pie_chart.png)
-
-
-
+-  [Figure 1: Summary Statistics](#figure-1-summary-statistics)
+ -  [Figure 2: Duplicate Records](#figure-2-duplicate-records)
+ -  [Figure 3: Top 10 Category Tags](#figure-3-top-10-category-tags)
+ -  [Figure 4: Top 10 Food Group Tags](#figure-4-top-10-food-group-tags)
+ -  [Figure 5: Top 10 Labels Tags](#figure-5-top-10-labels-tags)
+ -  [Figure 6: Top 10 Additives Tags](#figure-6-top-10-additives-tags)
+ -  [Figure 7: Top 10 Allergens Tags](#figure-7-top-10-allergens-tags)
+ -  [Figure 8: Nutri-score Distribution](#figure-8-nutri-score-distribution)
+ -  [Figure 9: Pearson Correlation Heatmap](#figure-9-pearson-correlation-heatmap)
+ -  [Figure 10: Spearman Correlation Heatmap](#figure-10-spearman-correlation-heatmap)
+ -  [Figure 11: Nutrient Feature Correlation Plot](#figure-11-nutrient-feature-correlation-plot)
+ -  [Figure 12: Class SMOTE Balance](#figure-12-class-smote-balance)
 
 ## 3. Methods
-This section summarizes the workflow used to extract, explore, preprocess, and prepare the data for modeling. Each step references the corresponding Jupyter notebook in the repository.
+This section summarizes the exact methods used in the project. Each subsection lists the specific step, the notebook where it is implemented, the inputs used, and the parameters or hyperparameters selected. This is a concise, procedural summary (no explanations of why — those appear in Discussion).
 
-### 3.1 Data Extraction  
+### 3.1 Data Extraction
 Notebook: [1_data_extraction.ipynb](notebooks/1_data_extraction.ipynb)
 
-We extracted the Open Food Facts dataset from Hugging Face to be used in our project.
+- Source: Open Food Facts dataset (parquet) from Hugging Face (raw product database)
+- Main outputs produced for downstream work:
+  - `data/food.csv` (initial cleaned subset)
+  - `data/food_clean.csv` (post-cleaning)
 
-- Downloaded raw 4M+ row Open Food Facts dataset from Hugging Face ([food.parquet](https://huggingface.co/datasets/openfoodfacts/product-database/blob/main/food.parquet))
-- Inspected structure, datatypes, and memory footprint  
-- Selected essential columns and filtered incomplete records  
-- Parsed JSON fields into tabular form  
-- Exported cleaned dataset as `food.csv`
+Example code snippet (data extraction / selection of columns):
+
+```python
+# load parquet, select columns and parse JSON fields
+df = pd.read_parquet('food.parquet')
+keep_cols = ['code','brands','product','lang','categories_tags','food_groups_tags',
+             'labels_tags','additives_n','additives_tags','allergens_tags','ingredients_n',
+             'ingredients', 'completeness', 'energy','sugars','added_sugars','carbohydrates',
+             'salt','fat','trans_fat','proteins','nutriscore_grade']
+df = df[keep_cols]
+df.to_csv('data/food.csv', index=False)
+```
 
 ---
 
-### 3.2 Data Exploration  
+### 3.2 Data Exploration
 Notebook: [2_eda.ipynb](notebooks/2_eda.ipynb)
 
-We analyzed the dataset to understand feature distributions, identify data quality issues, and explore relationships between nutritional variables.
-- Reviewed dataset structure 
-- Examined nutrient distributions and summary statistics  
-- Analyzed missingness and duplicate records
-- Identified outliers or anomolies
-- Visualized Nutri-Score distribution  
-- Identified strong correlations among nutrient features
+Summary of exploration steps (inputs -> outputs):
+
+- Input: `data/food.csv`
+- Operations performed:
+  - Compute univariate summary statistics for nutrients and counts
+  - Tag frequency counts for categories, labels, food groups, additives, allergens
+  - Missingness profile per column
+  - Duplicate detection for brand + product
+  - Correlation analysis (Pearson, Spearman) and pairwise plots for nutrients
+- Representative outputs: figures saved under `plots/` (summary_statistics.png, duplicates.png, top10_category_tags.png, etc.)
+
+Example snippet used to generate tag counts and plots:
+
+```python
+tag_counts = df['categories_tags'].explode().value_counts().head(10)
+fig = tag_counts.plot.bar()
+fig.figure.savefig('plots/top10_category_tags.png')
+```
 
 ---
 
-### 3.3 Data Preprocessing  
-Notebook: [3_preprocessing.ipynb](notebooks/3_preprocessing.ipynb)  
+### 3.3 Data Preprocessing
+Notebook: [3_data_preprocessing.ipynb](notebooks/3_data_preprocessing.ipynb)
 Documentation: [Preprocessing_Deliverable.md](documentation/Preprocessing_Deliverable.md)
 
-We prepared the data for modeling through cleaning, feature engineering, encoding, scaling, and class balancing.
+Processing steps and parameter choices (inputs -> outputs):
 
-- **Clean Data**: Remove duplicates, cap outliers, fix units, handle missing values
-- **Feature Engineering**: Calculate ratios, extract binary flags, simplify categories
-- **Encode & Scale**: RobustScaler, target encoding, one-hot encoding
-- **Split Data**: Stratified 70/15/15 train/val/test split
-- **Balance Classes**: Apply SMOTE to training set only
+- Input: `data/food.csv`
+- Cleaning and transforms applied:
+  - Duplicate handling: keep record with highest `completeness`
+  - Units normalization: convert energy values above 500 (assumed kJ) to kcal
+  - Outlier capping: clamp nutrient features at 99th percentile
+  - Imputation: numeric nutrients -> median; categorical missing tag lists -> [] (empty list); brands -> "unknown"
+  - Drop columns with excessive missingness when necessary (e.g., `added_sugars` if >90% missing)
+- Feature engineering:
+  - Nutrient ratios (e.g., sugar / carbs), density measures (e.g., fat/energy)
+  - Binary flags extracted from tags: `is_vegetarian`, `is_vegan`, `is_organic`, etc.
+- Encoding & scaling:
+  - Splits: 70% train / 15% val / 15% test (stratified by `nutriscore_grade`)
+  - Scaling: RobustScaler on numeric features (median/IQR)
+  - Target encoding: ordinal mapping A→0, B→1, C→2, D→3, E→4
+  - Class balancing: SMOTE applied to TRAIN set only
+- Outputs:
+  - `data/train_processed.csv`, `data/val_processed.csv`, `data/test_processed.csv`
 
-**Important**: We split BEFORE balancing to prevent synthetic samples from leaking into validation/test sets.
+Example preprocessing parameter snippet:
 
-## 3.4 First Model  
-Notebook: [`notebooks/4_first_model.ipynb`](notebooks/4_first_model.ipynb)
+```python
+from sklearn.preprocessing import RobustScaler
+from imblearn.over_sampling import SMOTE
 
-This notebook establishes our baseline predictive model using the processed dataset, exploring initial classification performance.
-- Loaded processed train/val/test splits  
-- Trained baseline classification models  
-- Evaluated early performance (accuracy, precision/recall, F1)  
-- Generated initial confusion matrices for comparison with future models  
+features = ['energy','sugars','carbohydrates','salt','fat','trans_fat','proteins','additives_n','ingredients_n']
+scaler = RobustScaler()
+X_train_scaled = scaler.fit_transform(X_train[features])
 
-## 3.5 Second Model
-Notebook: [`5_second_model.ipynb`](notebooks/5_second_model.ipynb)
+sm = SMOTE(random_state=42)
+X_train_balanced, y_train_balanced = sm.fit_resample(X_train_scaled, y_train)
+```
+
+---
+
+### 3.4 Modeling — Model 1: K-Nearest Neighbors (baseline)
+Notebook: [4_first_model.ipynb](notebooks/4_first_model.ipynb)
+
+Implementation & hyperparameters (executed in order):
+
+- Implementation 1 — Naive Python implementation:
+  - Algorithm: KNN (Euclidean distance)
+  - Features used: nutrients and counts (energy, sugars, carbohydrates, salt, fat, trans_fat, proteins, additives_n, ingredients_n)
+  - Train/test split: used `data/train_processed.csv` / `data/test_processed.csv`
+  - Hyperparameters tried: k = 1, 7, 15
+
+Example snippet (naive KNN init):
+
+```python
+class KNNClassifier:
+    def __init__(self, k=7):
+        self.k = k
+
+knn = KNNClassifier(k=7)
+knn.fit(X_train, y_train)
+```
+
+- Implementation 2 — Vectorized / batched NumPy KNN (performance improvement):
+  - Same feature set and hyperparameter sweep across k = [1, 7, 15]
+  - Batched prediction with `batch_size=128` to reduce memory pressure in distance computation
+
+Example (batched predict call):
+
+```python
+knn = KNNClassifierScratch(k=7)
+knn.fit(X_train, y_train)
+y_test_pred = knn.predict(X_test, batch_size=128)
+```
+
+Selected configuration reported in the notebook: k = 7 was chosen as the best tradeoff across test and training accuracy.
+
+---
+
+### 3.5 Modeling — Model 2: (planned / not executed in repo)
+
+Note: the project includes notes and suggested candidate models (Gaussian Naive Bayes, Decision Tree, Linear SVM) but the repository contains a single executed modeling notebook (`notebooks/4_first_model.ipynb`). If you want, I can implement and add a second model notebook (e.g., RandomForest or LogisticRegression) and report its parameters and results here.
+
+
 ---
 
 ## 4. Results
@@ -231,10 +307,7 @@ We identified some outliers with certain products having significantly large amo
 ---
 
 #### Nutri-Score:
-We analyzed the proportions of nutri-scores:
-- The blue/green slices (d, e) dominate the dataset.
-- Healthy classes a and b occupy smaller areas.
-- This imbalance might affect model learning and should be taken into consideration.
+We analyzed the proportions of nutri-scores.
 
 ##### Figure 8: Nutri-score Distribution
 ![alt text](plots/nutri_score_pie_chart.png)
@@ -243,47 +316,18 @@ We analyzed the proportions of nutri-scores:
 
 **Feature Correlation Results**
 
-##### **Figure 9 — Pearson Correlation Heatmap**  
+##### **Figure 9: Pearson Correlation Heatmap**  
 Shows linear relationships between nutritional variables.  
 ![Pearson Correlation Heatmap](plots/pearson_correlation_heatmap.png)
 
-##### **Figure 10 — Spearman Correlation Heatmap**  
+##### **Figure 10: Spearman Correlation Heatmap**  
 Captures monotonic (nonlinear) relationships among nutrients.  
 ![Spearman Correlation Heatmap](plots/spearman_correlation_heatmap.png)
 
-##### **Figure 11 — Nutrient Feature Correlation Plot**  
+##### **Figure 11: Nutrient Feature Correlation Plot**  
 Visualizes pairwise nutrient interactions and their density distributions.  
 ![Correlated Nutritional Features](plots/correlated_nutritional_features.png)
 
----
-
-
-**1. Strong Positive Correlations**
-These reflect expected nutritional relationships:
-- **Energy ↔ Carbohydrates (0.91)** — Carbs are a major calorie source.  
-- **Energy ↔ Fat (0.89)** — Fat contributes the most calories per gram (9 kcal).  
-- **Energy ↔ Proteins (0.69)** — Protein adds calories but less than fat/carbs.  
-- **Carbohydrates ↔ Sugars (0.65)** — Sugars are a subset of total carbs.  
-- **Ingredients_n ↔ Additives_n (0.68–0.72)** — More complex/processed foods contain more additives.
-
-**2. Moderate or Weak Correlations**
-- **Added sugars ↔ Sugars (0.71)** — Added sugars contribute significantly to total sugars.  
-- **Added sugars ↔ Carbohydrates (0.42)** — High added-sugar foods trend toward high carbs.  
-- **Energy ↔ Sugars (moderate)** — Sugary products contribute calories but not as strongly as fats or complex carbs.  
-- **Salt ↔ Other nutrients (near 0)** — Salty and sweet foods represent distinct product categories.  
-
-**3. Negative or Near-Zero Correlations**
-- **Proteins ↔ Sugars (–0.22)** — High-protein foods tend to have lower sugar content.  
-- **Completeness ↔ All nutrients (≈0)** — Completeness reflects data quality, not nutrition.  
-- **Trans_fat ↔ Nutrients (≈0)** — Trans fat levels relate more to regulation than general nutrition.
-
----
-
-**Insights From Pairwise Nutrient Plots**
-- **Energy vs. Fat** shows the strongest upward trend; fat-rich foods are the most calorie-dense.  
-- **Energy vs. Carbohydrates** is positive but more variable due to different product types.  
-- **Energy vs. Sugars** shows moderate correlation—sugar contributes calories, but not as dominantly as fats.  
-- **Energy vs. Protein** has a mild positive slope, consistent with protein’s lower caloric density.
 
 ---
 
@@ -310,7 +354,7 @@ These reflect expected nutritional relationships:
   - **protein_density**: proteins / energy (higher is better)
   - **sodium_mg**: salt * 400 (convert to sodium for guidelines)
 - Extract Binary Flags from Tags (`is_vegatarian`, `is_vegan`, `is_organic`, etc)
-![alt text](plots/binary_tag_flags.png)
+<br><br>![alt text](plots/binary_tag_flags.png)<br>
 - Simplify Categories, reducing 10,000 + category combinations to 8 primary tiers
   - Beverages: 103152
   - Snacks: 84670
@@ -352,10 +396,41 @@ These reflect expected nutritional relationships:
 
 This section summarizes the reasoning behind our methodological choices, interprets the results, and highlights limitations in the project.
 
-### 5.1 Data Extraction and Exploration
+### 5.1 Data Extraction
 Our extraction and filtering choices were driven by the need to create a reliable, consistent subset of the Open Food Facts dataset. Restricting the data to English-language products, valid Nutri-Score entries, and products with ingredient lists ensured that downstream models were trained on clean and usable information.
 
+### 5.2 Data Exploration
 EDA revealed several challenges—highly skewed nutritional distributions, missing values in key fields, and a strong imbalance across Nutri-Score grades—which directly informed our preprocessing steps.
+
+Nutri-Score inbalance:
+- The blue/green slices (d, e) dominate the dataset.
+- Healthy classes a and b occupy smaller areas.
+- This imbalance might affect model learning and should be taken into consideration.
+
+**1. Strong Positive Correlations**
+These reflect expected nutritional relationships:
+- **Energy ↔ Carbohydrates (0.91)** — Carbs are a major calorie source.  
+- **Energy ↔ Fat (0.89)** — Fat contributes the most calories per gram (9 kcal).  
+- **Energy ↔ Proteins (0.69)** — Protein adds calories but less than fat/carbs.  
+- **Carbohydrates ↔ Sugars (0.65)** — Sugars are a subset of total carbs.  
+- **Ingredients_n ↔ Additives_n (0.68–0.72)** — More complex/processed foods contain more additives.
+
+**2. Moderate or Weak Correlations**
+- **Added sugars ↔ Sugars (0.71)** — Added sugars contribute significantly to total sugars.  
+- **Added sugars ↔ Carbohydrates (0.42)** — High added-sugar foods trend toward high carbs.  
+- **Energy ↔ Sugars (moderate)** — Sugary products contribute calories but not as strongly as fats or complex carbs.  
+- **Salt ↔ Other nutrients (near 0)** — Salty and sweet foods represent distinct product categories.  
+
+**3. Negative or Near-Zero Correlations**
+- **Proteins ↔ Sugars (–0.22)** — High-protein foods tend to have lower sugar content.  
+- **Completeness ↔ All nutrients (≈0)** — Completeness reflects data quality, not nutrition.  
+- **Trans_fat ↔ Nutrients (≈0)** — Trans fat levels relate more to regulation than general nutrition.
+
+**Insights From Pairwise Nutrient Plots**
+- **Energy vs. Fat** shows the strongest upward trend; fat-rich foods are the most calorie-dense.  
+- **Energy vs. Carbohydrates** is positive but more variable due to different product types.  
+- **Energy vs. Sugars** shows moderate correlation—sugar contributes calories, but not as dominantly as fats.  
+- **Energy vs. Protein** has a mild positive slope, consistent with protein’s lower caloric density.
 
 ### 5.2 Preprocessing Decisions
 The preprocessing pipeline was designed to correct inconsistencies and create a modeling-ready dataset.  
