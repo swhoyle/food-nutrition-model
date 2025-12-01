@@ -89,7 +89,7 @@ We analyzed the dataset to understand feature distributions, identify data quali
 ---
 
 ### 3.3 Data Preprocessing  
-Notebook: [3_preprocessing.ipynb](notebooks/3_preprocessing.ipynb)  
+Notebook: [3_data_preprocessing.ipynb](notebooks/3_data_preprocessing.ipynb)  
 Documentation: [Preprocessing_Deliverable.md](documentation/Preprocessing_Deliverable.md)
 
 We prepared the data for modeling through cleaning, feature engineering, encoding, scaling, and class balancing.
@@ -425,6 +425,6 @@ pip install -r requirements.txt
 
 - [1_data_extraction.ipynb](notebooks/1_data_extraction.ipynb): Download and extract dataset (`food.parquet` → `food.csv`)  
 - [2_eda.ipynb](notebooks/2_eda.ipynb): Exploratory data analysis
-- [3_preprocessing.ipynb](notebooks/3_preprocessing.ipynb): Data cleaning and preprocessing
+- [3_data_preprocessing.ipynb](notebooks/3_data_preprocessing.ipynb): Data cleaning and preprocessing
 - [4_first_model.ipynb](notebooks/4_first_model.ipynb): Build our first prediction model
 - [5_second_model.ipynb](notebooks/5_second_model.ipynb): Build our first prediction model
