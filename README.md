@@ -162,6 +162,7 @@ final_cols = [
 ```
 - Initally Processed Dataset saved to `food.csv` (424k rows)
 
+---
 ### 4.2 Data Exploration - Results
 
 The dataset contains 424,297 observations and 24 features:
@@ -318,6 +319,7 @@ Visualizes pairwise nutrient interactions and their density distributions.
   - `val_processed.csv`: (51,911 rows, 38 columns)
   - `test_processed.csv`: (51,911 rows, 38 columns)
 
+---
 ### 4.4 First Model - Results
 
 Our first model using KNN (k=7) had the following results:
@@ -333,6 +335,7 @@ Our first model using KNN (k=7) had the following results:
 ![alt text](plots/cm_knn_k7_test.png)
 
 
+---
 ### 4.5 Second Model — KMeans (results)
 
 Our second model using PCA and KMeans had the following results:
@@ -373,9 +376,11 @@ Our second model using PCA and KMeans had the following results:
 
 This section summarizes the reasoning behind our methodological choices, interprets the results, and highlights limitations in the project.
 
+---
 ### 5.1 Data Extraction - Discussion
 Our extraction and filtering choices were driven by the need to create a reliable, consistent subset of the Open Food Facts dataset. Restricting the data to English-language products, valid Nutri-Score entries, and products with ingredient lists ensured that downstream models were trained on clean and usable information.
 
+---
 ### 5.2 Data Exploration - Discussion
 EDA revealed several challenges—highly skewed nutritional distributions, missing values in key fields, and a strong imbalance across Nutri-Score grades—which directly informed our preprocessing steps.
 
@@ -421,6 +426,7 @@ These reflect expected nutritional relationships:
 - **Energy vs. Sugars** shows moderate correlation—sugar contributes calories, but not as dominantly as fats.  
 - **Energy vs. Protein** has a mild positive slope, consistent with protein’s lower caloric density.
 
+---
 ### 5.3 Data Preprocessing - Discussion
 The preprocessing pipeline was designed to correct inconsistencies and create a modeling-ready dataset.  
 - **Outlier capping** and **unit normalization** (especially for energy) were necessary to prevent extreme values from distorting model learning.  
@@ -430,6 +436,7 @@ The preprocessing pipeline was designed to correct inconsistencies and create a 
 
 These decisions collectively improved the quality and structure of the inputs fed to the models.
 
+---
 ### 5.4 First Model - Discussion
 
 We trained our first supervised learning model using a K-Nearest Neighbors (KNN) classifier with k = 7, selected based on initial experimentation. The model was trained using the balanced training set (after applying SMOTE) and evaluated on both validation and test sets. Our numeric features were scaled using the RobustScaler, and missing values were imputed using median imputation, ensuring the model received clean and normalized inputs.
@@ -463,6 +470,7 @@ For future improvements, we plan to explore models that naturally combat varianc
 4. Naive Bayes is very fast baseline, handles categorical + numeric data well; useful for comparison with more complex models.
 
 
+---
 ### 5.5 Second Model — Discussion
 
 Before running KMeans, we apply PCA to reduce dimensions and understand feature redundancy (37 Feautures). It also improves KMeans performance by reducing dimensionality and removing correlated features.
@@ -523,6 +531,7 @@ This model exhibits **underfitting**:
 
 This **is not** traditional underfitting from model simplicity, but rather **data inadequacy** for unsupervised task(s).
 
+---
 ### 5.6 Model Comparison - Discussion
 
 #### What Went Wrong? - Key Insights
