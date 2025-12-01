@@ -571,20 +571,15 @@ The same preprocessing that gives KNN 76.5% accuracy makes KMeans fail at findin
 
 This was not a failure of KMeans -- it is a **valuable learning experience** about matching preprocessing strategies to model objectives.
 
+### 5.7 Future Models
+A natural next step for this work would be to explore more advanced modeling approaches that can capture nonlinear relationships and richer feature interactions. Ensemble methods such as Random Forests, Gradient Boosting, XGBoost, or LightGBM are strong candidates because they offer robustness to noisy nutritional data and excel at modeling complex patterns across mixed feature types. Deep neural networks also present an appealing direction, particularly when combined with additional modalities such as ingredient text or product images. Incorporating transformer-based NLP models could extract semantic information from ingredient lists, while vision models such as CNNs or Vision Transformers could use product images to provide complementary signals that are not present in the structured features. For applications where interpretability is essential, simpler models paired with explainability techniques may also be valuable. Finally, for unsupervised analysis, representation learning approaches such as autoencoders or clustering on minimally processed data which could reveal intrinsic structure without the distortions introduced by aggressive preprocessing. Collectively, these models offer meaningful opportunities to improve performance, interpretability, and multimodal integration in future iterations of this project.
 
 ## 6. Conclusion
-This project demonstrated that Nutri-Score can be reasonably predicted using structured nutritional, ingredient, and additive features from the Open Food Facts dataset. Our modeling pipeline—spanning extraction, EDA, preprocessing, feature engineering, and supervised learning—showed that data quality, preprocessing decisions, and feature transformations have a major impact on model performance.
+This project provided valuable insights into the complexities of preparing and modeling real-world nutritional data. One of the most significant lessons learned is the extent to which preprocessing choices influence downstream model behavior. Approaches that enhanced supervised learning performance—such as scaling methods, engineered nutrient ratios, and resampling strategies like SMOTE—were shown to introduce distortions that impeded the effectiveness of unsupervised analyses. In retrospect, a clearer separation between supervised and unsupervised pipelines, along with more deliberate consideration of each method’s underlying assumptions, would have strengthened the overall study design.
 
-A key lesson learned is that preprocessing must match the modeling objective. Techniques that benefit supervised models (RobustScaler, SMOTE, engineered nutrient ratios, target encoding) can unintentionally harm unsupervised methods such as clustering by removing natural variance and creating artificial dependencies between features. This highlighted the importance of designing pipelines that respect the assumptions of each modeling approach.
+Given additional time, several extensions would be worthwhile. These include integrating natural language processing techniques to analyze unstructured ingredient text, incorporating product images to capture visual nutritional cues, and experimenting with more sophisticated models or ensembles to further improve predictive accuracy. Reducing preprocessing intensity for unsupervised tasks and exploring clustering directly on raw or minimally processed data would also provide a more faithful representation of inherent structure in the dataset.
 
-Overall, our results show strong potential for automating nutritional assessment at scale and provide meaningful insights into which nutrient and ingredient patterns drive Nutri-Score classifications. With more time, future extensions could include:
-
-- Using NLP on ingredient text
-- Incorporating product images
-- Training deeper or ensemble models
-- Reducing preprocessing for unsupervised tasks (e.g., clustering or PCA on raw data)
-
-This work establishes a solid foundation for applying machine learning to public nutrition data and demonstrates the value—and challenges—of building reliable food-health prediction systems.
+Overall, this work underscores both the promise and the challenges of applying machine learning to nutritional assessment. While the results indicate that Nutri-Score can be predicted effectively from structured features, achieving robust and interpretable insights requires careful alignment between data transformation strategies and the methodological objectives of each analytical stage.
 
 ---
 
