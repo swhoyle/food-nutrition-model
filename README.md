@@ -49,7 +49,7 @@ This section presents selected figures used throughout our exploratory analysis 
 -  [Figure 1: Summary Statistics](#figure-1-summary-statistics)
  -  [Figure 2: Duplicate Records](#figure-2-duplicate-records)
  -  [Figure 3: Top 10 Category Tags](#figure-3-top-10-category-tags)
- -  [Figure 4: Top 10 Food Group Tags](#figure-4-top-10-food-group-tags)
+ -  [Figure 4: Top 10 Food Groups Tags](#figure-4-top-10-food-groups-tags)
  -  [Figure 5: Top 10 Labels Tags](#figure-5-top-10-labels-tags)
  -  [Figure 6: Top 10 Additives Tags](#figure-6-top-10-additives-tags)
  -  [Figure 7: Top 10 Allergens Tags](#figure-7-top-10-allergens-tags)
@@ -110,7 +110,7 @@ We prepared the data for modeling through cleaning, feature engineering, encodin
 ---
 
 ### 3.4 First Model  
-Notebook: [`notebooks/4_first_model.ipynb`](notebooks/4_first_model.ipynb)
+Notebook: [4_first_model.ipynb](notebooks/4_first_model.ipynb)
 
 This notebook establishes our baseline predictive model using the processed dataset, exploring initial classification performance.
 - Loaded processed train/val/test splits  
@@ -120,7 +120,7 @@ This notebook establishes our baseline predictive model using the processed data
 ---
 
 ### 3.5 Second Model — KMeans clustering (method)
-Notebook: [`notebooks/5_second_model.ipynb`](notebooks/5_second_model.ipynb)
+Notebook: [5_second_model.ipynb](notebooks/5_second_model.ipynb)
 
 This notebook implements our second model using unsupervised method.
 
