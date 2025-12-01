@@ -58,6 +58,8 @@ This section presents selected figures used throughout our exploratory analysis 
  -  [Figure 10: Spearman Correlation Heatmap](#figure-10-spearman-correlation-heatmap)
  -  [Figure 11: Nutrient Feature Correlation Plot](#figure-11-nutrient-feature-correlation-plot)
  -  [Figure 12: Class SMOTE Balance](#figure-12-class-smote-balance)
+ -  [Figure 13: KNN Classification Report (First Model)](#figure-13-knn-classification-report-first-model)
+ -  [Figure 14: KNN Confusion Matrix (First Model)](#figure-14-knn-confusion-matrix-first-model)
 
 ## 3. Methods
 This section summarizes the workflow used to extract, explore, preprocess, and prepare the data for modeling. Each step references the corresponding Jupyter notebook in the repository.
