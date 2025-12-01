@@ -6,3 +6,5 @@ matplotlib
 seaborn
 jupyter
 notebook
+scikit-learn
+imbalanced-learn
